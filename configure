@@ -1,0 +1,63 @@
+#!/bin/sh
+
+PLUGIN_DIR=/usr/lib/rhythmbox/plugins/lyrics
+TMP_DIR=/tmp
+
+help()
+{
+	echo \
+"Available options:
+ --help - print this help and exit
+ --tmp dir - set temporary directory, default is $TMP_DIR
+ --plugin dir - set plugin directory, default is $PLUGIN_DIR
+"
+}
+
+die()
+{
+	echo "$1" >&2
+	exit 1
+}
+
+set -- $(getopt -u -l help,tmp:,plugin: "" "$@")
+while [ $# -gt 0 ]
+do
+    case "$1" in
+		--help) help; exit;;
+		--tmp) TMP_DIR="$2"; shift;;
+		--plugin) PLUGIN_DIR="$2"; shift;;
+		--) shift; break;;
+    esac
+    shift
+done
+
+lyric_sites="$PLUGIN_DIR/LyricsSites.py"
+tmp="$TMP_DIR/LyricsSites.py.tmp"
+[ -e "$TMP_DIR" ] || die "$TMP_DIR doesn't exists, try to set with --tmp option, see $0 --help for help"
+[ -e "$PLUGIN_DIR" ] || die "$PLUGIN_DIR doesn't exists, try to set with --plugin option, see $0 --help for help"
+[ -e "$lyric_sites" ] || die "$lyric_sites doesn't exists, something goes wrong"
+
+for prog in egrep sed
+do
+	echo "checking for $prog..."
+	which $prog || die "*error* $prog not installed"
+done
+
+echo \
+"
+install:
+	egrep -q 'lyrics_sites\s*=\s*\[' $lyric_sites
+	sed -r 's/(lyrics_sites\s*=\s*\[)/from LyricWikiParser import LyricWikiParser\n\n\1\n\t{ '\"'\"'id'\"'\"': '\"'\"'lyricwiki.org'\"'\"',	'\"'\"'class'\"'\"': LyricWikiParser,	'\"'\"'name'\"'\"': _(\"LyricWiki (lyricwiki.org)\")  	},/' $lyric_sites > $tmp
+	mv $tmp $lyric_sites
+	cp LyricWikiParser.py $PLUGIN_DIR/
+
+deinstall:
+	sed -r '/from LyricWikiParser import LyricWikiParser/d;/\\{ '\"'\"'id'\"'\"': '\"'\"'lyricwiki.org'\"'\"',/d' $lyric_sites > $tmp
+	mv $tmp $lyric_sites
+	rm $PLUGIN_DIR/LyricWikiParser.py
+" > Makefile || exit
+
+echo "Makefile generated
+Type \`make install' to install
+Type \`make deinstall' to deinstall"
+
