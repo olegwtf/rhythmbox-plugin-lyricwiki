@@ -37,27 +37,28 @@ tmp="$TMP_DIR/LyricsSites.py.tmp"
 [ -e "$PLUGIN_DIR" ] || die "$PLUGIN_DIR doesn't exists, try to set with --plugin option, see $0 --help for help"
 [ -e "$lyric_sites" ] || die "$lyric_sites doesn't exists, something goes wrong"
 
-for prog in egrep sed
+for prog in egrep sed cat
 do
 	echo "checking for $prog..."
 	which $prog || die "*error* $prog not installed"
 done
 
-echo \
-"
+{
+cat <<CODE
 install:
+	! egrep -q 'import LyricWikiParser' $lyric_sites
 	egrep -q 'lyrics_sites\s*=\s*\[' $lyric_sites
-	sed -r 's/(lyrics_sites\s*=\s*\[)/from LyricWikiParser import LyricWikiParser\n\n\1\n\t{ '\"'\"'id'\"'\"': '\"'\"'lyricwiki.org'\"'\"',	'\"'\"'class'\"'\"': LyricWikiParser,	'\"'\"'name'\"'\"': _(\"LyricWiki (lyricwiki.org)\")  	},/' $lyric_sites > $tmp
+	sed -r 's/(lyrics_sites\s*=\s*\[)/from LyricWikiParser import LyricWikiParser\n\1\n\t{ '"'"'id'"'"': '"'"'lyricwiki.org'"'"',	'"'"'class'"'"': LyricWikiParser,	'"'"'name'"'"': _("LyricWiki (lyricwiki.org)")  	},/' $lyric_sites > $tmp
 	mv $tmp $lyric_sites
 	cp LyricWikiParser.py $PLUGIN_DIR/
 
 deinstall:
-	sed -r '/from LyricWikiParser import LyricWikiParser/d;/\\{ '\"'\"'id'\"'\"': '\"'\"'lyricwiki.org'\"'\"',/d' $lyric_sites > $tmp
+	sed -r '/from LyricWikiParser import LyricWikiParser/d;/\{ '"'"'id'"'"': '"'"'lyricwiki.org'"'"',/d' $lyric_sites > $tmp
 	mv $tmp $lyric_sites
 	rm $PLUGIN_DIR/LyricWikiParser.py
-" > Makefile || exit
+CODE
+} > Makefile || exit
 
 echo "Makefile generated
 Type \`make install' to install
 Type \`make deinstall' to deinstall"
-
