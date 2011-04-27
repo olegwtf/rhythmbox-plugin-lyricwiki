@@ -1,8 +1,7 @@
 INSTALLATION:
 1) ./configure
-2) make install
+2) As root: make install
 3) go to the plugins->Song Lyrics and enable LyricWiki
 
 DEINSTALLATION:
-1) make deinstall
-
+1) As root: make deinstall
