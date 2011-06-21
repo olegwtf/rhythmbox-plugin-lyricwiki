@@ -123,20 +123,13 @@ class LyricWikiParser(object):
 			callback (None, *data)
 			return
 			
-		try:
-			xml = minidom.parseString(result);
-			result = xml.getElementsByTagName("url").item(0).childNodes.item(0).data.encode("utf-8")
-		except:
-			callback (None, *data)
-			return
-			
-		matches = re.match(".+\/([^?=:]+):([^?=:]+)$", result)
+		matches = re.search("http://[^/]+/([^?=:]+):([^?=:<]+)", result)
 		if not matches:
 			# no more chance to get lyric for this Artist:Song from Lyricwiki: lyric not found
 			callback (None, *data)
 			return
 			
-		self.artist = matches.group(1)
-		self.title  = matches.group(2)
+		self.artist = urllib.unquote(matches.group(1))
+		self.title  = urllib.unquote(matches.group(2))
 		self.search(callback, *data)
 
