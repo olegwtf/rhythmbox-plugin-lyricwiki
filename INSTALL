@@ -5,3 +5,7 @@ INSTALLATION:
 
 DEINSTALLATION:
 1) As root: make deinstall
+
+UPDATING:
+1) make deinstall
+2) make install

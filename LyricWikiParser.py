@@ -132,4 +132,3 @@ class LyricWikiParser(object):
 		self.artist = urllib.unquote(matches.group(1))
 		self.title  = urllib.unquote(matches.group(2))
 		self.search(callback, *data)
-
